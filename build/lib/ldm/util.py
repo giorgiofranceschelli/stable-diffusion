@@ -13,6 +13,48 @@ from queue import Queue
 from inspect import isfunction
 from PIL import Image, ImageDraw, ImageFont
 
+from safetensors import safe_open
+from omegaconf import OmegaConf
+
+
+def load_model_from_config(config, sd):
+    model = instantiate_from_config(config)
+    model.load_state_dict(sd,strict=False)
+    model.cuda()
+    model.eval()
+    return model
+
+
+def load_safetensors(config_file='configs/autoencoder/ae_only.yaml', ckpt='../stable-diffusion-models/vae/diffusion_pytorch_model.safetensors'):
+    config = OmegaConf.load(config_file)
+    tensors = {}
+    with safe_open(ckpt, framework="pt", device=0) as f:
+        for k in f.keys():
+            tensors[k] = f.get_tensor(k)
+    model = load_model_from_config(config.model, tensors)
+    return model
+
+
+def load_model(config_file='configs/autoencoder/ae_only.yaml', ckpt='../stable-diffusion-models/vae/diffusion_pytorch_model.safetensors'):
+    config = OmegaConf.load(config_file)
+    if ckpt:
+        print(f"Loading model from {ckpt}")
+        pl_sd = torch.load(ckpt, map_location="cpu")
+        print(type(pl_sd))
+    else:
+        pl_sd = {"state_dict": None}
+    model = load_model_from_config(config.model, pl_sd)
+    return model
+
+
+def get_input(batch):
+        x = batch
+        if len(x.shape) == 3:
+            x = x[..., None]
+        x = rearrange(x, 'b h w c -> b c h w')
+        x = x.cuda()
+        return x
+
 
 def log_txt_as_img(wh, xc, size=10):
     # wh a tuple of (width, height)

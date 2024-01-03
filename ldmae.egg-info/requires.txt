@@ -1,3 +1,6 @@
 torch
 numpy
 tqdm
+omegaconf
+einops
+pytorch_lightning
