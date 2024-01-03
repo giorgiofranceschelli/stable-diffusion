@@ -450,13 +450,13 @@ class Encoder(nn.Module):
         h = hs[-1]  # hs[-1].copy() ?
         h = self.mid.block_1(h, temb)
         h = self.mid.attn_1(h)
-        h = self.mid.block_2(h, temb)
+        hm = self.mid.block_2(h, temb)
 
         # end
-        h = self.norm_out(h)
+        h = self.norm_out(hm)
         h = nonlinearity(h)
         h = self.conv_out(h)
-        return h, hs
+        return h, hs, hm
 
 
 class Decoder(nn.Module):
