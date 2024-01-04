@@ -456,7 +456,7 @@ class Encoder(nn.Module):
         h = self.norm_out(hm)
         h = nonlinearity(h)
         h = self.conv_out(h)
-        return h, hs, hm
+        return h, hm
 
 
 class Decoder(nn.Module):
