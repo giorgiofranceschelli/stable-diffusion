@@ -94,15 +94,15 @@ class VQModel(pl.LightningModule):
             self.model_ema(self)
 
     def encode(self, x, return_hidden=False):
-        h, hm = self.encoder(x)
+        h, hs, hm = self.encoder(x)
         moments = self.quant_conv(h)
         quant, emb_loss, info = self.quantize(moments)
         if return_hidden:
-            return quant, emb_loss, info, h, hm
+            return quant, emb_loss, info, h, hs, hm
         return quant, emb_loss, info
 
     def encode_to_prequant(self, x):
-        h, _ = self.encoder(x)
+        h, _, _ = self.encoder(x)
         h = self.quant_conv(h)
         return h
 
@@ -269,10 +269,10 @@ class VQModelInterface(VQModel):
         self.embed_dim = embed_dim
 
     def encode(self, x, return_hidden=False):
-        h, hm = self.encoder(x)
+        h, hs, hm = self.encoder(x)
         moments = self.quant_conv(h)
         if return_hidden:
-            return moments, h, hm
+            return moments, h, hs, hm
         return moments
 
     def decode(self, h, force_not_quantize=False):
@@ -326,11 +326,11 @@ class AutoencoderKL(pl.LightningModule):
         print(f"Restored from {path}")
 
     def encode(self, x, return_hidden=False):
-        h, hm = self.encoder(x)
+        h, hs, hm = self.encoder(x)
         moments = self.quant_conv(h)
         posterior = DiagonalGaussianDistribution(moments)
         if return_hidden:
-            return posterior, h, hm
+            return posterior, h, hs, hm
         return posterior
 
     def decode(self, z):
